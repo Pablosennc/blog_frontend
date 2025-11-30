@@ -47,7 +47,7 @@ function AstroPhotoBlogApp() {
 
   const handleAddPost = async (newPostData) => {
     try {
-      const response = await axios.post(API_URL, newPostData);
+      const response = await axios.post(`${API_URL}/posts`, newPostData);
       const created = response.data && response.data.data ? response.data.data : response.data;
       setPosts([created, ...posts]);
       setModalOpen(false);
@@ -61,7 +61,7 @@ function AstroPhotoBlogApp() {
     if (!window.confirm("¿Estás seguro de que quieres borrar este recuerdo?")) return;
 
     try {
-      await axios.delete(`${API_URL}/${id}`);
+      await axios.delete(`${API_URL}/posts/${id}`);
       setPosts(posts.filter(post => post.id !== id));
     } catch (error) {
       console.error("Error eliminando post:", error);

@@ -14,7 +14,6 @@ function DiaryInput({ onAdd }) {
 
   return (
     <div style={{ marginTop: 32, marginBottom: 24, background: 'rgba(255,255,255,0.9)', padding: 16, borderRadius: 12, boxShadow: '0 6px 20px rgba(0,0,0,0.08)' }}>
-      <TextInput placeholder="Título (opcional)" value={title} onChange={e => setTitle(e.target.value)} mb="sm" />
       <Textarea placeholder="Escribe tu entrada de diario aquí..." value={content} onChange={e => setContent(e.target.value)} autosize minRows={3} maxRows={6} mb="sm" />
       <Group position="right">
         <Button onClick={handleAdd} variant="gradient" gradient={{ from: 'teal', to: 'lime' }}>Agregar nota</Button>

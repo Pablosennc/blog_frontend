@@ -38,8 +38,8 @@ function PolaroidCard({ post, onEdit, onDelete }) {
         }}
         withPlaceholder
       />
-      <Text weight={700} size="lg" align="center" style={{ marginBottom: 6, fontFamily: 'cursive' }}>{post.title}</Text>
-      <Text size="sm" color="dimmed" align="center" style={{ marginBottom: 10, minHeight: 38 }}>
+      <Text weight={700} size="lg" align="center" style={{ marginBottom: 6, fontFamily: 'cursive', color: '#222222' }}>{post.title}</Text>
+      <Text size="sm" align="center" style={{ marginBottom: 10, minHeight: 38, color: '#444444' }}>
         {post.description}
       </Text>
       <Group position="apart" style={{ width: '100%' }} mt="xs">

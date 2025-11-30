@@ -7,91 +7,90 @@ import NewPostModal from './components/NewPostModal';
 import DiaryInput from './components/DiaryInput';
 import DiaryList from './components/DiaryList';
 
-
-// Si despliegas a producción, cambia esto por la URL de Koyeb/Railway
+// URL Base de tu API
 const API_URL = 'http://127.0.0.1:8000/api';
 
 function AstroPhotoBlogApp() {
   const [posts, setPosts] = useState([]);
-  
+  const [notes, setNotes] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
-  const [notes, setNotes] = useState([]);
 
-
+  // ------------------------------------------------------
+  // 1. CARGA INICIAL DE DATOS (Posts y Notas)
+  // ------------------------------------------------------
   useEffect(() => {
-    fetchPosts();
+    fetchData();
   }, []);
 
-  const fetchPosts = async () => {
+  const fetchData = async () => {
     try {
+      // Hacemos las dos peticiones en paralelo
       const [postsRes, notesRes] = await Promise.all([
         axios.get(`${API_URL}/posts`),
-        axios.get(`${API_URL}/notes`)
+        axios.get(`${API_URL}/notes`) // Asegúrate de haber creado esta ruta en Laravel
       ]);
       
-      const postsData = postsRes.data && postsRes.data.data ? postsRes.data.data : postsRes.data;
-      const notesData = notesRes.data && notesRes.data.data ? notesRes.data.data : notesRes.data;
-
-      console.log("Lo que llegó de Laravel (posts):", postsData);
-      console.log("Lo que llegó de Laravel (notes):", notesData);
-
-      setPosts(Array.isArray(postsData) ? postsData : []);
-      setNotes(Array.isArray(notesData) ? notesData : []);
+      setPosts(postsRes.data);
+      setNotes(notesRes.data);
     } catch (error) {
-      console.error("Error cargando datos:", error);
+      console.error("Error conectando con el servidor:", error);
     }
   };
 
-
+  // ------------------------------------------------------
+  // 2. LÓGICA DE POSTS (Fotos)
+  // ------------------------------------------------------
   const handleAddPost = async (newPostData) => {
     try {
-      const response = await axios.post(API_URL, newPostData);
-      const created = response.data && response.data.data ? response.data.data : response.data;
-      setPosts([created, ...posts]);
+      const response = await axios.post(`${API_URL}/posts`, newPostData);
+      setPosts([response.data, ...posts]);
       setModalOpen(false);
     } catch (error) {
       console.error("Error creando post:", error);
-      alert("Error al guardar. Revisa que el servidor Laravel esté activo (puerto 8000) y la URL de la imagen sea válida.");
+      alert("Error al guardar la foto.");
     }
   };
 
   const handleDeletePost = async (id) => {
     if (!window.confirm("¿Estás seguro de que quieres borrar este recuerdo?")) return;
-
     try {
-      await axios.delete(`${API_URL}/${id}`);
-      setPosts(posts.filter(post => post.id !== id));
+      await axios.delete(`${API_URL}/posts/${id}`);
+      setPosts(posts.filter(p => p.id !== id));
     } catch (error) {
       console.error("Error eliminando post:", error);
-      alert("No se pudo eliminar el post. Verifica la conexión con el servidor.");
+      alert("No se pudo eliminar.");
     }
   };
-  
+
+  const handleEditPost = async (updatedPost) => {
+    try {
+      await axios.put(`${API_URL}/posts/${updatedPost.id}`, updatedPost);
+      setPosts(posts.map(p => p.id === updatedPost.id ? updatedPost : p));
+      setEditModalOpen(false);
+      setEditingPost(null);
+    } catch (error) {
+      console.error("Error editando post:", error);
+      alert("Error al editar.");
+    }
+  };
+
   const openEditModal = (post) => {
     setEditingPost(post);
     setEditModalOpen(true);
   };
 
-  const handleEditPost = async (updatedPostData) => {
-    try {
-      await axios.put(`${API_URL}/${updatedPostData.id}`, updatedPostData);
-      setPosts(posts.map(post => post.id === updatedPostData.id ? updatedPostData : post));
-      setEditingPost(null);
-      setEditModalOpen(false);
-    } catch (error) {
-      console.error("Error actualizando post:", error);
-      alert("Error al actualizar el post.");
-    }
-  };
-
+  // ------------------------------------------------------
+  // 3. LÓGICA DE NOTAS (Diario)
+  // ------------------------------------------------------
   const handleAddNote = async (noteInput) => {
     try {
-      const textToSend = noteInput && (noteInput.text || noteInput.content) ? (noteInput.text || noteInput.content) : noteInput;
-      const res = await axios.post(`${API_URL}/notes`, { content: textToSend });
-      const note = res.data && res.data.data ? res.data.data : res.data;
-      setNotes([note, ...notes]);
+      // Verificamos si noteInput es un string o un objeto
+      const textToSend = noteInput.text || noteInput.content || noteInput;
+      
+      const response = await axios.post(`${API_URL}/notes`, { content: textToSend });
+      setNotes([response.data, ...notes]);
     } catch (error) {
       console.error("Error guardando nota:", error);
       alert("No se pudo guardar la nota en el servidor.");
@@ -104,54 +103,40 @@ function AstroPhotoBlogApp() {
       setNotes(notes.filter(n => n.id !== id));
     } catch (error) {
       console.error("Error borrando nota:", error);
-      alert("No se pudo borrar la nota.");
     }
   };
-
 
   return (
     <div
       style={{
         minHeight: '100vh',
         width: '100vw',
-        background: 'url([https://img.freepik.com/vector-gratis/notas-rasgadas-vector-fondo-melocoton_53876-109024.jpg](https://img.freepik.com/vector-gratis/notas-rasgadas-vector-fondo-melocoton_53876-109024.jpg)) center/cover no-repeat fixed',
+        background: 'url(https://img.freepik.com/vector-gratis/notas-rasgadas-vector-fondo-melocoton_53876-109024.jpg) center/cover no-repeat fixed',
         paddingTop: 90,
         paddingBottom: 40,
         boxSizing: 'border-box',
       }}
     >
-
       <AstroHeader />
       
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: 20, background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02))', borderRadius: 12 }}>
         <Container size="lg" style={{ maxWidth: 1200 }}>
           <Group position="apart" mb="xl">
-            <Title order={2} style={{ color: '#222222', fontWeight: 600, letterSpacing: 1, textShadow: '0 1px 0 rgba(255,255,255,0.6)' }}>
+            <Title order={2} style={{ color: '#fafafaff', fontWeight: 600, letterSpacing: 1, textShadow: '0 2px 8px #222' }}>
               Explora y comparte tus momentos
             </Title>
             <Button
-              size="md"
-              variant="filled"
-              color="indigo"
-              radius={"md "}
+              size="md" variant="light" color="white" radius="md"
               onClick={() => setModalOpen(true)}
-              style={{ fontWeight: 700 }}
+              style={{ fontWeight: 600 }}
             >
               + Nueva foto
             </Button>
           </Group>
 
-
-          {posts.length === 0 && (
-            <div style={{ textAlign: 'center', color: '#222222', padding: 40 }}>
-              <p style={{ fontSize: '1.2rem', marginBottom: 10, color: '#333333' }}>No hay recuerdos guardados aún.</p>
-              <small style={{ color: '#555555' }}>.</small>
-            </div>
-          )}
-
+          {/* Grid de Fotos */}
           <SimpleGrid
-            cols={3}
-            spacing="xl"
+            cols={3} spacing="xl"
             breakpoints={[
               { maxWidth: 900, cols: 2, spacing: 'lg' },
               { maxWidth: 600, cols: 1, spacing: 'md' },
@@ -169,17 +154,12 @@ function AstroPhotoBlogApp() {
         </Container>
       </div>
 
-      
+      {/* Modales */}
       <NewPostModal 
         opened={modalOpen} 
         onClose={() => setModalOpen(false)} 
         onAdd={handleAddPost} 
       />
-
-      <div style={{ maxWidth: 1200, margin: '24px auto 60px' }}>
-        <DiaryInput onAdd={handleAddNote} />
-        <DiaryList notes={notes} onDelete={handleDeleteNote} />
-      </div>
 
       <NewPostModal
         opened={editModalOpen}
@@ -188,6 +168,12 @@ function AstroPhotoBlogApp() {
         initialData={editingPost}
         isEdit
       />
+
+      {/* Sección Diario */}
+      <div style={{ maxWidth: 1200, margin: '24px auto 60px' }}>
+        <DiaryInput onAdd={handleAddNote} />
+        <DiaryList notes={notes} onDelete={handleDeleteNote} />
+      </div>
     </div>
   );
 }

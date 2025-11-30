@@ -9,7 +9,7 @@ import DiaryList from './components/DiaryList';
 
 
 // Si despliegas a producción, cambia esto por la URL de Koyeb/Railway
-const API_URL = 'http://127.0.0.1:8000/api';
+const API_URL = 'https://TU-APP-EN-KOYEB.koyeb.app/api';
 
 function AstroPhotoBlogApp() {
   const [posts, setPosts] = useState([]);
